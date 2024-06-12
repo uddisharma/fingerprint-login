@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile</title>
+  </head>
+  <body>
+    <h1>Profile Page</h1>
+    <button id="register-passkey-btn">
+      Register Passkey (Fingerprint) for Login everytime
+    </button>
+
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+    <script>
+      const registerPasskeyBtn = document.getElementById(
+        "register-passkey-btn"
+      );
+
+      registerPasskeyBtn.addEventListener("click", async (e) => {
+        const url = new URL(window.location);
+        const userId = url.searchParams.get("userId");
+
+        const response = await fetch("/register-challenge", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        });
+
+        const challengeResult = await response.json();
+        const { options } = challengeResult;
+
+        const authenticationResult =
+          await SimpleWebAuthnBrowser.startRegistration({ ...options });
+
+        const res = await fetch("/register-verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId, cred: authenticationResult }),
+        });
+        const res2 = await res.json();
+
+        if (res2?.verified) {
+          console.log("first");
+          window.location.href = "/login.html?userId=" + userId;
+        } else {
+          alert("Something went wrong when registering passkey");
+        }
+      });
+    </script>
+  </body>
+</html>
