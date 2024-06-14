@@ -1,1 +1,1 @@
-fingerprint login 
+fingerprint auth
